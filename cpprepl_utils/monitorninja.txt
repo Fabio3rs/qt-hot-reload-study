@@ -1,0 +1,28 @@
+#include <thread>
+#include <filesystem>
+#include <string_view>
+#include <string>
+#include <dlfcn.h>
+#includedir /mnt/projects/Projects/hhqml/hhqml/build -I/mnt/projects/Projects/hhqml/hhqml -isystem /usr/include/x86_64-linux-gnu/qt5/QtQml -I/mnt/projects/Projects/hhqml/hhqml/build/hhqml_autogen/include -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -isystem /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
+#includedir /usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/x86_64-linux-gnu -I/usr/include/libmount -I/usr/include/blkid -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
+#lib notify
+#lib gdk_pixbuf-2.0
+#lib gio-2.0
+#lib gobject-2.0
+#lib glib-2.0
+#lib Qt5Widgets
+#lib Qt5Gui
+#lib Qt5Core
+#eval ../cpprepl_utils/ninjadev.cpp
+#include <QtCore/qbytearray.h>
+#include <QtCore/qmetatype.h>
+#include <QtCore/QVariant>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QStatusBar>
+#include <QtWidgets/QWidget>
+#eval char maind[] = "main"; char *argv[] = {maind, nullptr}; std::thread(mainfn, 1, argv).detach();
+auto projdir = std::filesystem::current_path().parent_path().string();
+#eval monitorAndRebuildFileOrDirectory(projdir);
