@@ -5,13 +5,17 @@ Window {
     width: 640
     height: 480
     visible: true
-    title: qsTr("Hello World")
+    title: qsTr("Hello World!!!!!")
 
     Rectangle {
-        width: 100
+        width: 250
         height: 100
-        color: "red"
+        color: "blue"
         anchors.centerIn: parent
+    }
+
+    SyntaxHighlightEditor {
+        anchors.fill: parent
     }
 
     property int counter: 0
