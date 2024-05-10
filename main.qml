@@ -1,5 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
+import QtQuick.Controls 2.12
+import com.testobj 1.0
 
 Window {
     width: 640
@@ -18,5 +20,20 @@ Window {
         anchors.fill: parent
     }
 
+    ObjectTest {
+        id: objectTest
+    }
+
+    Button {
+        text: "Click me"
+        onClicked: {
+            counter++
+            console.log("Button clicked " + counter + " times")
+            console.log("Plaintext: " + plaintext)
+            objectTest.test2();
+        }
+    }
+
     property int counter: 0
+    property string plaintext: ""
 }

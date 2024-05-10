@@ -10,7 +10,12 @@ TextArea {
     selectByMouse: true
     textFormat: Qt.RichText;
 
-    property bool highlightingInProgress: false
+    property bool highlightingInProgress: true
+
+    Component.onCompleted: {
+        textArea.text = plaintext;
+        highlightingInProgress = false;
+    }
 
     // Syntax highlighting
     onTextChanged: {
@@ -23,6 +28,8 @@ TextArea {
         var currentCursorPosition = textArea.cursorPosition;
 
         var text = textArea.getText(0, textArea.length);
+        plaintext = text;
+
         var newText = "";
         var index = 0;
 

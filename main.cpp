@@ -1,9 +1,11 @@
+#include "ObjectTest.hpp"
 #include <QDirIterator>
 #include <QFile>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include <QResource>
+#include <QWindow>
 #include <dlfcn.h>
 #include <iostream>
 #include <qguiapplication.h>
@@ -16,6 +18,8 @@ int qtExec(int argc, char *argv[]);
 extern int qCleanupResources_qml();
 extern int qInitResources_qml();
 
+static std::unordered_map<std::string, QVariant> propsbackup;
+
 int qtExec(int argc, char *argv[]) {
     const QUrl url(QStringLiteral("qrc:/main.qml"));
 
@@ -23,6 +27,8 @@ int qtExec(int argc, char *argv[]) {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
     QGuiApplication app(argc, argv);
+
+    qmlRegisterType<ObjectTest>("com.testobj", 1, 0, "ObjectTest");
 
     QQmlApplicationEngine engine;
     QObject::connect(
@@ -35,6 +41,12 @@ int qtExec(int argc, char *argv[]) {
             if (obj) {
                 std::cout << "Object created: " << obj << " url "
                           << objUrl.toString().toStdString() << std::endl;
+
+                for (const auto &[name, value] : propsbackup) {
+                    obj->setProperty(name.c_str(), value);
+                }
+
+                propsbackup.clear();
             }
         },
         Qt::QueuedConnection);
@@ -81,12 +93,55 @@ int mainfn(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) { return mainfn(argc, argv); }
 
+static auto dump_props(QObject *o)
+    -> std::unordered_map<std::string, QVariant> {
+    std::unordered_map<std::string, QVariant> result;
+    auto mo = o->metaObject();
+    qDebug() << "## Properties of" << o << "##";
+    do {
+        qDebug() << "### Class" << mo->className() << "###";
+        /*if (mo->className() == std::string_view("QQuickWindow")) {
+          break;
+        }*/
+
+        result.reserve(mo->propertyCount() - mo->propertyOffset());
+        for (int i = mo->propertyOffset(); i < mo->propertyCount(); ++i) {
+            auto var = mo->property(i).read(o);
+
+            const uint typeId = var.userType();
+            if (typeId != QMetaType::UnknownType) {
+                std::string_view view(QMetaType::typeName(typeId));
+
+                if (view.find('*') != std::string_view::npos) {
+                    continue;
+                }
+            }
+
+            result.emplace(mo->property(i).name(), std::move(var));
+            break;
+        }
+    } while ((mo = mo->superClass()));
+
+    return result;
+}
+
 void reloadAllTheApp(std::string_view path) {
     std::cout << "File changed: " << path << std::endl;
 
     // restart the application
     bool resqt = QMetaObject::invokeMethod(
-        qApp, []() { qApp->quit(); }, Qt::QueuedConnection);
+        qApp,
+        []() {
+            for (auto window : QGuiApplication::allWindows()) {
+                propsbackup = dump_props(window);
+                for (auto &[name, value] : propsbackup) {
+                    qDebug() << "Property" << name.c_str() << "value" << value;
+                }
+            }
+
+            qApp->quit();
+        },
+        Qt::QueuedConnection);
 
     std::cout << "Quit result: " << resqt << std::endl;
 }

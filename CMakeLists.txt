@@ -18,6 +18,7 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
+        ObjectTest.cpp
         qml.qrc
 )
 
@@ -43,6 +44,8 @@ else()
         )
     endif()
 endif()
+
+set_target_properties(hhqml PROPERTIES AUTOMOC TRUE)
 
 target_compile_definitions(hhqml
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
