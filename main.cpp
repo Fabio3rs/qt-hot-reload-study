@@ -50,6 +50,15 @@ int qtExec(int argc, char *argv[]) {
             }
         },
         Qt::QueuedConnection);
+
+    {
+        QVariantMap initialProperties;
+
+        for (const auto &[name, value] : propsbackup) {
+            initialProperties.insert(QString::fromStdString(name), value);
+        }
+        engine.setInitialProperties(initialProperties);
+    }
     engine.load(url);
 
     int res = app.exec();
@@ -95,7 +104,17 @@ int main(int argc, char *argv[]) { return mainfn(argc, argv); }
 
 static auto dump_props(QObject *o)
     -> std::unordered_map<std::string, QVariant> {
+    if (!o) {
+        return {};
+    }
+
     std::unordered_map<std::string, QVariant> result;
+
+    /*for (auto child : o->children()) {
+        auto child_props = dump_props(child);
+        result.insert(child_props.begin(), child_props.end());
+    }*/
+
     auto mo = o->metaObject();
     qDebug() << "## Properties of" << o << "##";
     do {
@@ -106,7 +125,18 @@ static auto dump_props(QObject *o)
 
         result.reserve(mo->propertyCount() - mo->propertyOffset());
         for (int i = mo->propertyOffset(); i < mo->propertyCount(); ++i) {
-            auto var = mo->property(i).read(o);
+            auto metaProp = mo->property(i);
+
+            qDebug() << "### metaProp  " << metaProp.name() << " "
+                     << metaProp.isUser() << " " << metaProp.isReadable() << " "
+                     << metaProp.isWritable() << " " << metaProp.isDesignable()
+                     << " " << metaProp.isScriptable() << "###";
+
+            if (!metaProp.isWritable()) {
+                continue;
+            }
+
+            auto var = metaProp.read(o);
 
             const uint typeId = var.userType();
             if (typeId != QMetaType::UnknownType) {
@@ -117,8 +147,7 @@ static auto dump_props(QObject *o)
                 }
             }
 
-            result.emplace(mo->property(i).name(), std::move(var));
-            break;
+            result.emplace(metaProp.name(), std::move(var));
         }
     } while ((mo = mo->superClass()));
 

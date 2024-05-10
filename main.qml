@@ -30,6 +30,8 @@ Window {
             counter++
             console.log("Button clicked " + counter + " times")
             console.log("Plaintext: " + plaintext)
+
+            plaintext += "Hello World"
             objectTest.test2();
         }
     }
